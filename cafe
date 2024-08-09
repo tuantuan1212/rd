@@ -8,7 +8,7 @@ end
 
 local function movePlayer(destination, duration)
     local humanoidRootPart = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-    if humanoidRootPart then
+    if (humanoidRootPart) then
         local tweenInfo = TweenInfo.new(duration, Enum.EasingStyle.Linear, Enum.EasingDirection.Out, 0, false, 0)
         local tweenGoal = { CFrame = destination }
         local tween = tweenService:Create(humanoidRootPart, tweenInfo, tweenGoal)
@@ -19,12 +19,8 @@ local function movePlayer(destination, duration)
     end
 end
 
-local startPosition = CFrame.new(-508.848083, 320.303558, 473.541016, 0.989616275, 0.0591917932, -0.130980968, -0.0283454414, 0.973741829, 0.225883275, 0.140912056, -0.219825029, 0.965308547)
-local endPosition = CFrame.new(-474.97757, 150.915604, 327.867401, 0.0508248284, 0.0412671156, 0.99785465, -1.15775038e-07, 0.999145985, -0.0413205139, -0.998707652, 0.0020999955, 0.0507814251)
-
-local function TravelToDressrosa()
-    replicatedStorage.Remotes.CommF_:InvokeServer("TravelDressrosa")
-end
+local startPosition = CFrame.new(-1613.46729, 38.532074, 146.637939, -0.858484089, -0.0241556726, -0.512270987, 4.54019755e-07, 0.998890102, -0.0471024923, 0.512840152, -0.0404369533, -0.85753125)
+local endPosition = CFrame.new(-1406.82495, 66.5333252, 2.68874645, -0.870761752, -0.019041121, -0.491336256, 6.69388101e-09, 0.999249935, -0.0387246832, 0.491705179, -0.0337199755, -0.870108545)
 
 local function RandomAction()
     replicatedStorage.Remotes.CommF_:InvokeServer("Cousin", "Buy")
@@ -51,13 +47,13 @@ local function UnequipTools()
 end
 
 SetTeam("Pirates")
-TravelToDressrosa()
-movePlayer(startPosition, 0)
-
+game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("TravelMain")
+wait(1)
+movePlayer(startPosition, 11)
 game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("CommF_"):InvokeServer("SetSpawnPoint")
 
 while true do
-    wait(1)
+    wait(0)
     local success, errorMessage = pcall(function()
         movePlayer(endPosition, 0)
     end)
