@@ -1,0 +1,75 @@
+local plr = game.Players.LocalPlayer
+local rs = game:GetService("ReplicatedStorage")
+local virtualInputManager = game:GetService("VirtualInputManager")
+
+local function SetTeam(teamName)
+    rs.Remotes.CommF_:InvokeServer("SetTeam", teamName)
+end
+
+local function MoveTo(destination)
+    local humanoid = plr.Character:WaitForChild("Humanoid")
+    humanoid:MoveTo(destination)
+    humanoid.MoveToFinished:Wait()
+end
+
+local function RandomAction()
+    rs.Remotes.CommF_:InvokeServer("Cousin", "Buy")
+end
+
+local function DropMultipleItemsFromBackpack(quantity)
+    for _, tool in ipairs(plr.Backpack:GetChildren()) do
+        if tool:IsA("Tool") then
+            tool.Parent = plr.Character
+            local toolInCharacter = plr.Character:FindFirstChild(tool.Name)
+            if toolInCharacter then
+                toolInCharacter.Parent = game.Workspace
+            end
+        end
+    end
+end
+
+local function UnequipTools()
+    for _, tool in ipairs(plr.Character:GetChildren()) do
+        if tool:IsA("Tool") then
+            tool.Parent = plr.Backpack
+        end
+    end
+end
+
+local function PerformRandomActions()
+    while true do
+        RandomAction()
+        UnequipTools()
+        wait(1)
+        DropMultipleItemsFromBackpack(200)
+        wait(1)
+    end
+end
+
+local destinations = {
+    Vector3.new(-439.756195, 74.7229309, 334.207611),
+    Vector3.new(-430.462463, 74.6348419, 383.055756),
+    Vector3.new(-426.655273, 74.6416321, 387.312103),
+    Vector3.new(-415.558685, 74.5402679, 404.479309, -0.973930359, 0.000758915732, 0.226846188, -8.699717e-07, 0.999994338, -0.00334924622, -0.22684741, -0.00326213031, -0.973924816),  -- Điểm thứ tư
+}
+
+SetTeam("Pirates")
+wait(1)
+
+local function RunDestination(i, destination)
+    MoveTo(destination)
+
+    if i == 4 then
+        local actionCoroutine = coroutine.create(PerformRandomActions)
+        coroutine.resume(actionCoroutine)
+    elseif i == 3 then
+        wait(3)
+    end
+end
+
+for i, destination in ipairs(destinations) do
+    RunDestination(i, destination)
+end
+
+wait(6)
+game:Shutdown()
