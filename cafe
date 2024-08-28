@@ -51,6 +51,7 @@ local function UnequipTools()
 end
 
 SetTeam("Pirates")
+wait(1)
 TravelToDressrosa()
 movePlayer(startPosition, 0)
 
