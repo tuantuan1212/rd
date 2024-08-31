@@ -6,25 +6,24 @@ local function SetTeam(teamName)
     replicatedStorage.Remotes.CommF_:InvokeServer("SetTeam", teamName)
 end
 
-local function movePlayer(destination, duration)
+local function movePlayer(destination, duration, instant)
     local humanoidRootPart = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
     if humanoidRootPart then
-        local tweenInfo = TweenInfo.new(duration, Enum.EasingStyle.Linear, Enum.EasingDirection.Out, 0, false, 0)
-        local tweenGoal = { CFrame = destination }
-        local tween = tweenService:Create(humanoidRootPart, tweenInfo, tweenGoal)
-        tween:Play()
-        tween.Completed:Wait()
+        if instant then
+            humanoidRootPart.CFrame = destination
+        else
+            local tweenInfo = TweenInfo.new(duration, Enum.EasingStyle.Linear, Enum.EasingDirection.Out, 0, false, 0)
+            local tweenGoal = { CFrame = destination }
+            local tween = tweenService:Create(humanoidRootPart, tweenInfo, tweenGoal)
+            tween:Play()
+            tween.Completed:Wait()
+        end
     else
         warn("HumanoidRootPart not found. Character may not be loaded.")
     end
 end
 
-local startPosition = CFrame.new(-372.049652, 150.903564, 225.194305, 0.99265933, -0.00475903414, -0.120850623, 9.77888703e-08, 0.999225557, -0.039348051, 0.120944306, 0.0390591919, 0.99189055)
-local endPosition = CFrame.new(-372.049652, 150.903564, 225.194305, 0.99265933, -0.00475903414, -0.120850623, 9.77888703e-08, 0.999225557, -0.039348051, 0.120944306, 0.0390591919, 0.99189055)
-
-local function TravelToDressrosa()
-    replicatedStorage.Remotes.CommF_:InvokeServer("TravelDressrosa")
-end
+local startPosition = CFrame.new(174.784561, 72.9415436, 2630.53979, 0.644071221, 0.0298484676, 0.764382958, 2.71946192e-07, 0.999238431, -0.0390195921, -0.764965534, 0.0251315907, 0.643580735)
 
 local function RandomAction()
     replicatedStorage.Remotes.CommF_:InvokeServer("Cousin", "Buy")
@@ -52,15 +51,12 @@ end
 
 SetTeam("Pirates")
 wait(1)
-TravelToDressrosa()
-movePlayer(startPosition, 0)
-
-game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("CommF_"):InvokeServer("SetSpawnPoint")
+movePlayer(startPosition, 0, true)
 
 while true do
-    wait(1)
+    wait(0)
     local success, errorMessage = pcall(function()
-        movePlayer(endPosition, 0)
+        movePlayer(startPosition, 0)
     end)
     wait(0)
     RandomAction()
@@ -74,5 +70,5 @@ while true do
         warn("Error during movePlayer:", errorMessage)
     end
 
-    wait(1)
+    wait(0)
 end
