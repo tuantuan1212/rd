@@ -62,7 +62,7 @@ while true do
     RandomAction()
     wait(0)
     UnequipTools()
-    wait(1)
+    wait(0)
     DropMultipleItemsFromBackpack(200)
     wait(0)
 
