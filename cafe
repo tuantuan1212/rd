@@ -1,52 +1,10 @@
--- Services and Variables
 local player = game.Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 local replicatedStorage = game:GetService("ReplicatedStorage")
+local tweenService = game:GetService("TweenService")
 local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 
--- Constants
-local targetPosition = Vector3.new(-372.049652, 150.903564, 225.194305)
-local flySpeed = 100
-
--- Utility Functions
-local function SetTeam(teamName)
-    if replicatedStorage:FindFirstChild("Remotes") and replicatedStorage.Remotes:FindFirstChild("CommF_") then
-        replicatedStorage.Remotes.CommF_:InvokeServer("SetTeam", teamName)
-    else
-        warn("CommF_ remote not found")
-    end
-end
-
-local function RandomAction()
-    if replicatedStorage:FindFirstChild("Remotes") and replicatedStorage.Remotes:FindFirstChild("CommF_") then
-        replicatedStorage.Remotes.CommF_:InvokeServer("Cousin", "Buy")
-    else
-        warn("CommF_ remote not found")
-    end
-end
-
-local function DropMultipleItemsFromBackpack(quantity)
-    local count = 0
-    for _, tool in ipairs(player.Backpack:GetChildren()) do
-        if tool:IsA("Tool") and count < quantity then
-            tool.Parent = player.Character
-            local toolInCharacter = player.Character:FindFirstChild(tool.Name)
-            if toolInCharacter then
-                toolInCharacter.Parent = game.Workspace
-                count = count + 1
-            end
-        end
-    end
-end
-
-local function UnequipTools()
-    for _, tool in ipairs(player.Character:GetChildren()) do
-        if tool:IsA("Tool") then
-            tool.Parent = player.Backpack
-        end
-    end
-end
-
+-- Smooth movement function
 local function flyToPositionSmooth(position, speed, callback)
     if character and humanoidRootPart then
         local startPosition = humanoidRootPart.Position
@@ -54,61 +12,99 @@ local function flyToPositionSmooth(position, speed, callback)
         local travelTime = distance / speed
         local startTime = tick()
 
-        print("Starting movement from", startPosition, "to", position)
-        print("Distance:", distance, "Travel Time:", travelTime)
-
+        -- Move the character based on time rather than iteration count
         local connection
         connection = game:GetService("RunService").Heartbeat:Connect(function()
             local elapsedTime = tick() - startTime
-            local progress = elapsedTime / travelTime
-            if progress < 1 then
+            if elapsedTime < travelTime then
+                local progress = elapsedTime / travelTime
                 humanoidRootPart.CFrame = CFrame.new(startPosition:Lerp(position, progress))
             else
+                -- Ensure exact position after travel time
                 humanoidRootPart.CFrame = CFrame.new(position)
                 connection:Disconnect()
-                print("Arrived at position:", position)
-                if callback then callback() end
+                if callback then
+                    callback()
+                end
             end
         end)
     else
-        warn("Character or HumanoidRootPart not found")
+        warn("HumanoidRootPart not found or Character not loaded.")
     end
 end
 
--- Main Execution Block
-local function executeScript()
-    local success, errorMessage = pcall(function()
-        SetTeam("Pirates")
-        print("SetTeam called successfully")
-        wait(1)
+-- Điểm bắt đầu
+local startPosition = CFrame.new(-474.928925, 150.898499, 312.700775)
+
+-- Các hàm khác
+local function RandomAction()
+    local success, err = pcall(function()
         if replicatedStorage:FindFirstChild("Remotes") and replicatedStorage.Remotes:FindFirstChild("CommF_") then
-            replicatedStorage.Remotes.CommF_:InvokeServer("TravelDressrosa")
-            print("TravelDressrosa invoked successfully")
+            replicatedStorage.Remotes.CommF_:InvokeServer("Cousin", "Buy")
         else
-            warn("CommF_ remote not found")
+            warn("CommF_ remote not found.")
         end
-        wait(1)
-        print("Starting to fly to position")
-        flyToPositionSmooth(targetPosition, flySpeed, function()
-            print("Reached target position")
-            wait(1)
-            RandomAction()
-            UnequipTools()
-            DropMultipleItemsFromBackpack(200)
-        end)
     end)
-
     if not success then
-        warn("Error during initial setup:", errorMessage)
+        warn("Error during RandomAction:", err)
     end
 end
 
--- Run the script once and then continuously
-executeScript()
-while true do
-    local success, errorMessage = pcall(executeScript)
+local function DropMultipleItemsFromBackpack(quantity)
+    local success, err = pcall(function()
+        for _, tool in ipairs(player.Backpack:GetChildren()) do
+            if tool:IsA("Tool") then
+                tool.Parent = player.Character
+                local toolInCharacter = player.Character:FindFirstChild(tool.Name)
+                if toolInCharacter then
+                    toolInCharacter.Parent = game.Workspace
+                end
+            end
+        end
+    end)
     if not success then
-        warn("Error during execution:", errorMessage)
+        warn("Error during DropMultipleItemsFromBackpack:", err)
     end
-    wait(1) -- Adjust wait time to reduce system load
+end
+
+local function UnequipTools()
+    local success, err = pcall(function()
+        for _, tool in ipairs(player.Character:GetChildren()) do
+            if tool:IsA("Tool") then
+                tool.Parent = player.Backpack
+            end
+        end
+    end)
+    if not success then
+        warn("Error during UnequipTools:", err)
+    end
+end
+
+-- Thực hiện các hành động
+SetTeam("Pirates")
+wait(1)
+TravelToDressrosa()
+flyToPositionSmooth(startPosition.Position, 200, function()
+    -- Callback function once movement is complete
+    RandomAction()
+    UnequipTools()
+    DropMultipleItemsFromBackpack(200)
+end)
+
+while true do
+    wait(1)
+    local success, errorMessage = pcall(function()
+        flyToPositionSmooth(startPosition.Position, 200)
+    end)
+    if not success then
+        warn("Error during flyToPositionSmooth:", errorMessage)
+    end
+    
+    wait(1)
+    RandomAction()
+    wait(1)
+    UnequipTools()
+    wait(1)
+    DropMultipleItemsFromBackpack(200)
+    wait(1)
 end
