@@ -49,7 +49,7 @@ end
 SetTeam("Pirates")
 game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("TravelMain")
 wait(1)
-movePlayer(startPosition, 11)
+movePlayer(startPosition, 1)
 game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("CommF_"):InvokeServer("SetSpawnPoint")
 
 while true do
