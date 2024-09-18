@@ -1,38 +1,63 @@
 local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
 local replicatedStorage = game:GetService("ReplicatedStorage")
 local tweenService = game:GetService("TweenService")
+local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 
-local function SetTeam(teamName)
-    replicatedStorage.Remotes.CommF_:InvokeServer("SetTeam", teamName)
-end
+-- Provided coordinates
+local targetPosition = Vector3.new(-372.049652, 150.903564, 225.194305)
+local flySpeed = 100  -- Điều chỉnh tốc độ bay
 
-local function movePlayer(destination, duration)
-    local humanoidRootPart = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-    if (humanoidRootPart) then
-        local tweenInfo = TweenInfo.new(duration, Enum.EasingStyle.Linear, Enum.EasingDirection.Out, 0, false, 0)
-        local tweenGoal = { CFrame = destination }
-        local tween = tweenService:Create(humanoidRootPart, tweenInfo, tweenGoal)
-        tween:Play()
-        tween.Completed:Wait()
+-- Smooth movement function
+local function flyToPositionSmooth(position, speed, callback)
+    if character and humanoidRootPart then
+        local startPosition = humanoidRootPart.Position
+        local distance = (position - startPosition).Magnitude
+        local travelTime = distance / speed
+        local startTime = tick()
+
+        print("Starting movement from", startPosition, "to", position)
+        print("Distance:", distance, "Travel Time:", travelTime)
+
+        -- Move the character based on time rather than iteration count
+        local connection
+        connection = game:GetService("RunService").Heartbeat:Connect(function()
+            local elapsedTime = tick() - startTime
+            local progress = elapsedTime / travelTime
+            if progress < 1 then
+                humanoidRootPart.CFrame = CFrame.new(startPosition:Lerp(position, progress))
+            else
+                -- Ensure exact position after travel time
+                humanoidRootPart.CFrame = CFrame.new(position)
+                connection:Disconnect()
+                print("Arrived at position:", position)
+                if callback then
+                    callback()
+                end
+            end
+        end)
     else
-        warn("HumanoidRootPart not found. Character may not be loaded.")
+        warn("Character or HumanoidRootPart not found")
     end
 end
 
-local startPosition = CFrame.new(-1613.46729, 38.532074, 146.637939, -0.858484089, -0.0241556726, -0.512270987, 4.54019755e-07, 0.998890102, -0.0471024923, 0.512840152, -0.0404369533, -0.85753125)
-local endPosition = CFrame.new(-1406.82495, 66.5333252, 2.68874645, -0.870761752, -0.019041121, -0.491336256, 6.69388101e-09, 0.999249935, -0.0387246832, 0.491705179, -0.0337199755, -0.870108545)
-
 local function RandomAction()
-    replicatedStorage.Remotes.CommF_:InvokeServer("Cousin", "Buy")
+    if replicatedStorage:FindFirstChild("Remotes") and replicatedStorage.Remotes:FindFirstChild("CommF_") then
+        replicatedStorage.Remotes.CommF_:InvokeServer("Cousin", "Buy")
+    else
+        warn("CommF_ remote not found")
+    end
 end
 
 local function DropMultipleItemsFromBackpack(quantity)
+    local count = 0
     for _, tool in ipairs(player.Backpack:GetChildren()) do
-        if tool:IsA("Tool") then
+        if tool:IsA("Tool") and count < quantity then
             tool.Parent = player.Character
             local toolInCharacter = player.Character:FindFirstChild(tool.Name)
             if toolInCharacter then
                 toolInCharacter.Parent = game.Workspace
+                count = count + 1
             end
         end
     end
@@ -46,28 +71,52 @@ local function UnequipTools()
     end
 end
 
-SetTeam("Pirates")
-game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("TravelMain")
-wait(1)
-movePlayer(startPosition, 1)
-game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("CommF_"):InvokeServer("SetSpawnPoint")
+-- Set team function
+local function SetTeam(teamName)
+    if replicatedStorage:FindFirstChild("Remotes") and replicatedStorage.Remotes:FindFirstChild("CommF_") then
+        replicatedStorage.Remotes.CommF_:InvokeServer("SetTeam", teamName)
+    else
+        warn("CommF_ remote not found")
+    end
+end
+
+-- Main execution block
+local success, errorMessage = pcall(function()
+    SetTeam("Pirates")
+    print("SetTeam called successfully")
+    wait(1)
+    if replicatedStorage:FindFirstChild("Remotes") and replicatedStorage.Remotes:FindFirstChild("CommF_") then
+        replicatedStorage.Remotes.CommF_:InvokeServer("TravelDressrosa")
+        print("TravelDressrosa invoked successfully")
+    else
+        warn("CommF_ remote not found")
+    end
+    wait(1)
+    flyToPositionSmooth(targetPosition, flySpeed, function()
+        wait(1)
+        RandomAction()
+        UnequipTools()
+        DropMultipleItemsFromBackpack(200)
+    end)
+end)
+
+if not success then
+    warn("Error during initial setup:", errorMessage)
+end
 
 while true do
-    wait(0)
     local success, errorMessage = pcall(function()
-        movePlayer(endPosition, 0)
+        print("Starting flyToPositionSmooth")
+        flyToPositionSmooth(targetPosition, flySpeed, function()
+            RandomAction()
+            UnequipTools()
+            DropMultipleItemsFromBackpack(200)
+        end)
     end)
-    wait(0)
-    RandomAction()
-    wait(0)
-    UnequipTools()
-    wait(1)
-    DropMultipleItemsFromBackpack(200)
-    wait(0)
 
     if not success then
-        warn("Error during movePlayer:", errorMessage)
+        warn("Error during execution:", errorMessage)
     end
 
-    wait(1)
+    wait(1) -- Adjust wait time to reduce system load
 end
