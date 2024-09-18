@@ -6,24 +6,21 @@ local function SetTeam(teamName)
     replicatedStorage.Remotes.CommF_:InvokeServer("SetTeam", teamName)
 end
 
-local function movePlayer(destination, duration, instant)
+local function movePlayer(destination, duration)
     local humanoidRootPart = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-    if humanoidRootPart then
-        if instant then
-            humanoidRootPart.CFrame = destination
-        else
-            local tweenInfo = TweenInfo.new(duration, Enum.EasingStyle.Linear, Enum.EasingDirection.Out, 0, false, 0)
-            local tweenGoal = { CFrame = destination }
-            local tween = tweenService:Create(humanoidRootPart, tweenInfo, tweenGoal)
-            tween:Play()
-            tween.Completed:Wait()
-        end
+    if (humanoidRootPart) then
+        local tweenInfo = TweenInfo.new(duration, Enum.EasingStyle.Linear, Enum.EasingDirection.Out, 0, false, 0)
+        local tweenGoal = { CFrame = destination }
+        local tween = tweenService:Create(humanoidRootPart, tweenInfo, tweenGoal)
+        tween:Play()
+        tween.Completed:Wait()
     else
         warn("HumanoidRootPart not found. Character may not be loaded.")
     end
 end
 
-local startPosition = CFrame.new(174.784561, 72.9415436, 2630.53979, 0.644071221, 0.0298484676, 0.764382958, 2.71946192e-07, 0.999238431, -0.0390195921, -0.764965534, 0.0251315907, 0.643580735)
+local startPosition = CFrame.new(-1613.46729, 38.532074, 146.637939, -0.858484089, -0.0241556726, -0.512270987, 4.54019755e-07, 0.998890102, -0.0471024923, 0.512840152, -0.0404369533, -0.85753125)
+local endPosition = CFrame.new(-1406.82495, 66.5333252, 2.68874645, -0.870761752, -0.019041121, -0.491336256, 6.69388101e-09, 0.999249935, -0.0387246832, 0.491705179, -0.0337199755, -0.870108545)
 
 local function RandomAction()
     replicatedStorage.Remotes.CommF_:InvokeServer("Cousin", "Buy")
@@ -50,19 +47,21 @@ local function UnequipTools()
 end
 
 SetTeam("Pirates")
+game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("TravelMain")
 wait(1)
-movePlayer(startPosition, 0, true)
+movePlayer(startPosition, 11)
+game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("CommF_"):InvokeServer("SetSpawnPoint")
 
 while true do
     wait(0)
     local success, errorMessage = pcall(function()
-        movePlayer(startPosition, 0)
+        movePlayer(endPosition, 0)
     end)
     wait(0)
     RandomAction()
     wait(0)
     UnequipTools()
-    wait(0)
+    wait(1)
     DropMultipleItemsFromBackpack(200)
     wait(0)
 
@@ -70,5 +69,5 @@ while true do
         warn("Error during movePlayer:", errorMessage)
     end
 
-    wait(0)
+    wait(1)
 end
