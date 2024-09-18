@@ -1,7 +1,6 @@
 local player = game.Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 local replicatedStorage = game:GetService("ReplicatedStorage")
-local tweenService = game:GetService("TweenService")
 local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 
 -- Provided coordinates
@@ -92,7 +91,9 @@ local success, errorMessage = pcall(function()
         warn("CommF_ remote not found")
     end
     wait(1)
+    print("Starting to fly to position")
     flyToPositionSmooth(targetPosition, flySpeed, function()
+        print("Reached target position")
         wait(1)
         RandomAction()
         UnequipTools()
@@ -106,8 +107,9 @@ end
 
 while true do
     local success, errorMessage = pcall(function()
-        print("Starting flyToPositionSmooth")
+        print("Starting flyToPositionSmooth in loop")
         flyToPositionSmooth(targetPosition, flySpeed, function()
+            print("Callback executed after reaching the target position in loop")
             RandomAction()
             UnequipTools()
             DropMultipleItemsFromBackpack(200)
