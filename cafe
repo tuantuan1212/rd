@@ -1,42 +1,19 @@
+-- Services and Variables
 local player = game.Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 local replicatedStorage = game:GetService("ReplicatedStorage")
 local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 
--- Provided coordinates
+-- Constants
 local targetPosition = Vector3.new(-372.049652, 150.903564, 225.194305)
-local flySpeed = 200 -- Điều chỉnh tốc độ bay
+local flySpeed = 100
 
--- Smooth movement function
-local function flyToPositionSmooth(position, speed, callback)
-    if character and humanoidRootPart then
-        local startPosition = humanoidRootPart.Position
-        local distance = (position - startPosition).Magnitude
-        local travelTime = distance / speed
-        local startTime = tick()
-
-        print("Starting movement from", startPosition, "to", position)
-        print("Distance:", distance, "Travel Time:", travelTime)
-
-        -- Move the character based on time rather than iteration count
-        local connection
-        connection = game:GetService("RunService").Heartbeat:Connect(function()
-            local elapsedTime = tick() - startTime
-            local progress = elapsedTime / travelTime
-            if progress < 1 then
-                humanoidRootPart.CFrame = CFrame.new(startPosition:Lerp(position, progress))
-            else
-                -- Ensure exact position after travel time
-                humanoidRootPart.CFrame = CFrame.new(position)
-                connection:Disconnect()
-                print("Arrived at position:", position)
-                if callback then
-                    callback()
-                end
-            end
-        end)
+-- Utility Functions
+local function SetTeam(teamName)
+    if replicatedStorage:FindFirstChild("Remotes") and replicatedStorage.Remotes:FindFirstChild("CommF_") then
+        replicatedStorage.Remotes.CommF_:InvokeServer("SetTeam", teamName)
     else
-        warn("Character or HumanoidRootPart not found")
+        warn("CommF_ remote not found")
     end
 end
 
@@ -70,46 +47,51 @@ local function UnequipTools()
     end
 end
 
--- Set team function
-local function SetTeam(teamName)
-    if replicatedStorage:FindFirstChild("Remotes") and replicatedStorage.Remotes:FindFirstChild("CommF_") then
-        replicatedStorage.Remotes.CommF_:InvokeServer("SetTeam", teamName)
+local function flyToPositionSmooth(position, speed, callback)
+    if character and humanoidRootPart then
+        local startPosition = humanoidRootPart.Position
+        local distance = (position - startPosition).Magnitude
+        local travelTime = distance / speed
+        local startTime = tick()
+
+        print("Starting movement from", startPosition, "to", position)
+        print("Distance:", distance, "Travel Time:", travelTime)
+
+        local connection
+        connection = game:GetService("RunService").Heartbeat:Connect(function()
+            local elapsedTime = tick() - startTime
+            local progress = elapsedTime / travelTime
+            if progress < 1 then
+                humanoidRootPart.CFrame = CFrame.new(startPosition:Lerp(position, progress))
+            else
+                humanoidRootPart.CFrame = CFrame.new(position)
+                connection:Disconnect()
+                print("Arrived at position:", position)
+                if callback then callback() end
+            end
+        end)
     else
-        warn("CommF_ remote not found")
+        warn("Character or HumanoidRootPart not found")
     end
 end
 
--- Main execution block
-local success, errorMessage = pcall(function()
-    SetTeam("Pirates")
-    print("SetTeam called successfully")
-    wait(1)
-    if replicatedStorage:FindFirstChild("Remotes") and replicatedStorage.Remotes:FindFirstChild("CommF_") then
-        replicatedStorage.Remotes.CommF_:InvokeServer("TravelDressrosa")
-        print("TravelDressrosa invoked successfully")
-    else
-        warn("CommF_ remote not found")
-    end
-    wait(1)
-    print("Starting to fly to position")
-    flyToPositionSmooth(targetPosition, flySpeed, function()
-        print("Reached target position")
-        wait(1)
-        RandomAction()
-        UnequipTools()
-        DropMultipleItemsFromBackpack(200)
-    end)
-end)
-
-if not success then
-    warn("Error during initial setup:", errorMessage)
-end
-
-while true do
+-- Main Execution Block
+local function executeScript()
     local success, errorMessage = pcall(function()
-        print("Starting flyToPositionSmooth in loop")
+        SetTeam("Pirates")
+        print("SetTeam called successfully")
+        wait(1)
+        if replicatedStorage:FindFirstChild("Remotes") and replicatedStorage.Remotes:FindFirstChild("CommF_") then
+            replicatedStorage.Remotes.CommF_:InvokeServer("TravelDressrosa")
+            print("TravelDressrosa invoked successfully")
+        else
+            warn("CommF_ remote not found")
+        end
+        wait(1)
+        print("Starting to fly to position")
         flyToPositionSmooth(targetPosition, flySpeed, function()
-            print("Callback executed after reaching the target position in loop")
+            print("Reached target position")
+            wait(1)
             RandomAction()
             UnequipTools()
             DropMultipleItemsFromBackpack(200)
@@ -117,8 +99,16 @@ while true do
     end)
 
     if not success then
+        warn("Error during initial setup:", errorMessage)
+    end
+end
+
+-- Run the script once and then continuously
+executeScript()
+while true do
+    local success, errorMessage = pcall(executeScript)
+    if not success then
         warn("Error during execution:", errorMessage)
     end
-
     wait(1) -- Adjust wait time to reduce system load
 end
