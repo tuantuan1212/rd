@@ -5,7 +5,7 @@ local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 
 -- Provided coordinates
 local targetPosition = Vector3.new(-372.049652, 150.903564, 225.194305)
-local flySpeed = 100  -- Điều chỉnh tốc độ bay
+local flySpeed = 200 -- Điều chỉnh tốc độ bay
 
 -- Smooth movement function
 local function flyToPositionSmooth(position, speed, callback)
