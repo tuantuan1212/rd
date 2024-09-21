@@ -1,63 +1,23 @@
 local player = game.Players.LocalPlayer
 local replicatedStorage = game:GetService("ReplicatedStorage")
-local runService = game:GetService("RunService")
+local tweenService = game:GetService("TweenService")
 
--- Hàm thay đổi đội
 local function SetTeam(teamName)
     replicatedStorage.Remotes.CommF_:InvokeServer("SetTeam", teamName)
 end
 
--- Hàm di chuyển đến vị trí với hiệu ứng mượt mà
-local function flyToPositionSmooth(destination, speed, callback)
-    local humanoidRootPart = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-    if not humanoidRootPart then
-        warn("HumanoidRootPart not found. Character may not be loaded.")
-        return
-    end
-
-    local startPosition = humanoidRootPart.Position
-    local distance = (destination.Position - startPosition).Magnitude
-    if distance == 0 then
-        warn("Start and destination positions are the same. No movement needed.")
-        return
-    end
-
-    local travelTime = distance / speed
-    if travelTime <= 0 then
-        warn("Invalid travelTime calculated. Speed may be too high.")
-        return
-    end
-
-    local startTime = tick()
-
-    local connection
-    connection = runService.Heartbeat:Connect(function()
-        local elapsedTime = tick() - startTime
-        if elapsedTime < travelTime then
-            local progress = elapsedTime / travelTime
-            humanoidRootPart.CFrame = CFrame.new(startPosition:Lerp(destination.Position, progress))
-        else
-            humanoidRootPart.CFrame = destination
-            connection:Disconnect()
-            if callback then
-                callback()
-            end
-        end
-    end)
+local function TravelZou()
+    replicatedStorage.Remotes.CommF_:InvokeServer("TravelZou")
 end
 
--- Hàm thực hiện hành động ngẫu nhiên
+local function SetSpawnPoint()
+    game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("CommF_"):InvokeServer("SetSpawnPoint")
+end
+
 local function RandomAction()
-    local success, result = pcall(function()
-        return replicatedStorage.Remotes.CommF_:InvokeServer("Cousin", "Buy")
-    end)
-
-    if not success then
-        warn("Error during RandomAction:", result)
-    end
+    replicatedStorage.Remotes.CommF_:InvokeServer("Cousin", "Buy")
 end
 
--- Hàm thả nhiều đồ từ ba lô
 local function DropMultipleItemsFromBackpack(quantity)
     for _, tool in ipairs(player.Backpack:GetChildren()) do
         if tool:IsA("Tool") then
@@ -70,7 +30,6 @@ local function DropMultipleItemsFromBackpack(quantity)
     end
 end
 
--- Hàm gỡ bỏ công cụ
 local function UnequipTools()
     for _, tool in ipairs(player.Character:GetChildren()) do
         if tool:IsA("Tool") then
@@ -79,38 +38,43 @@ local function UnequipTools()
     end
 end
 
--- Gọi phương thức TravelDressrosa
-local function TravelToDressrosa()
-    local success, result = pcall(function()
-        return replicatedStorage.Remotes.CommF_:InvokeServer("TravelDressrosa")
-    end)
-
-    if not success then
-        warn("Error during TravelToDressrosa:", result)
+local function movePlayer(destination, duration)
+    local humanoidRootPart = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+    if humanoidRootPart then
+        local initialPosition = humanoidRootPart.CFrame
+        local tweenInfo = TweenInfo.new(duration, Enum.EasingStyle.Linear)
+        local tween = tweenService:Create(humanoidRootPart, tweenInfo, {CFrame = destination})
+        tween:Play()
+        tween.Completed:Wait()
+    else
+        warn("HumanoidRootPart not found. Character may not be loaded.")
     end
 end
 
--- Vị trí bắt đầu
-local startPosition = CFrame.new(-372.049652, 150.903564, 225.194305, 0.99265933, -0.00475903414, -0.120850623, 9.77888703e-08, 0.999225557, -0.039348051, 0.120944306, 0.0390591919, 0.99189055)
-
--- Thực hiện các hành động
 SetTeam("Pirates")
+TravelZou()
+wait(2)
+game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("requestEntrance", Vector3.new(-12550.5615, 338.723907, -7490.50586))
+SetSpawnPoint()
 wait(1)
-TravelToDressrosa()
+local endPosition = CFrame.new(-12544.0811, 460.95871, -7572.50195, -0.0122566521, 0.126096845, -0.991942286, 0.00503664091, 0.992012024, 0.126043469, 0.999912143, -0.00345116667, -0.0127938986)
 
-flyToPositionSmooth(startPosition, 200, function()
-    while true do
-        local success, errorMessage = pcall(function()
-            flyToPositionSmooth(startPosition, 200)
-        end)
+while true do
+    wait(0)
+    local success, errorMessage = pcall(function()
+        movePlayer(endPosition, 0)
+    end)
+    wait(1)
+    RandomAction()
+    wait(1)
+    UnequipTools()
+    wait(1)
+    DropMultipleItemsFromBackpack(200)
+    wait(1)
 
-        if not success then
-            warn("Error during flyToPositionSmooth:", errorMessage)
-        end
-        
-        wait(1)
-        RandomAction()
-        UnequipTools()
-        DropMultipleItemsFromBackpack(200)
+    if not success then
+        warn("Error during movePlayer:", errorMessage)
     end
-end)
+
+    wait(0)
+end
