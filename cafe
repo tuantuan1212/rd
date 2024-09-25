@@ -53,10 +53,10 @@ end
 
 SetTeam("Pirates")
 TravelZou()
-wait(2)
+wait(1)
 game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("requestEntrance", Vector3.new(-12550.5615, 338.723907, -7490.50586))
 SetSpawnPoint()
-wait(1)
+wait(0)
 local endPosition = CFrame.new(-12544.0811, 460.95871, -7572.50195, -0.0122566521, 0.126096845, -0.991942286, 0.00503664091, 0.992012024, 0.126043469, 0.999912143, -0.00345116667, -0.0127938986)
 
 while true do
@@ -64,13 +64,13 @@ while true do
     local success, errorMessage = pcall(function()
         movePlayer(endPosition, 0)
     end)
-    wait(1)
+    wait(0)
     RandomAction()
-    wait(1)
+    wait(0)
     UnequipTools()
-    wait(1)
+    wait(0)
     DropMultipleItemsFromBackpack(200)
-    wait(1)
+    wait(0)
 
     if not success then
         warn("Error during movePlayer:", errorMessage)
