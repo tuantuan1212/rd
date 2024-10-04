@@ -59,13 +59,15 @@ end
 
 -- Hàm thả nhiều đồ từ ba lô
 local function DropMultipleItemsFromBackpack(quantity)
+    local count = 0
     for _, tool in ipairs(player.Backpack:GetChildren()) do
-        if tool:IsA("Tool") then
+        if tool:IsA("Tool") and count < quantity then
             tool.Parent = player.Character
             local toolInCharacter = player.Character:FindFirstChild(tool.Name)
             if toolInCharacter then
                 toolInCharacter.Parent = game.Workspace
             end
+            count = count + 1
         end
     end
 end
@@ -79,38 +81,50 @@ local function UnequipTools()
     end
 end
 
--- Gọi phương thức TravelMain
-local function TravelMain()
+-- Gọi phương thức TravelDressrosa
+local function TravelToDressrosa()
     local success, result = pcall(function()
-        return replicatedStorage.Remotes.CommF_:InvokeServer("TravelMain")
+        return replicatedStorage.Remotes.CommF_:InvokeServer("TravelDressrosa")
     end)
 
     if not success then
-        warn("Error during TravelMain:", result)
+        warn("Error during TravelToDressrosa:", result)
     end
 end
 
 -- Vị trí bắt đầu
-local startPosition = CFrame.new(-1406.82495, 66.5333252, 2.68874645, -0.870761752, -0.019041121, -0.491336256, 6.69388101e-09, 0.999249935, -0.0387246832, 0.491705179, -0.0337199755, -0.870108545)
+local startPosition = CFrame.new(-372.049652, 150.903564, 225.194305)
 
 -- Thực hiện các hành động
 SetTeam("Pirates")
 wait(1)
-TravelMain()
+TravelToDressrosa()
 
 flyToPositionSmooth(startPosition, 200, function()
-    while true do
-        local success, errorMessage = pcall(function()
-            flyToPositionSmooth(startPosition, 200)
-        end)
+    local success, errorMessage = pcall(function()
+        flyToPositionSmooth(startPosition, 200)
+    end)
 
-        if not success then
-            warn("Error during flyToPositionSmooth:", errorMessage)
-        end
-        
-        wait(1)
-        RandomAction()
-        UnequipTools()
-        DropMultipleItemsFromBackpack(200)
+    if not success then
+        warn("Error during flyToPositionSmooth:", errorMessage)
+    end
+
+    -- Sau khi bay đến vị trí đầu tiên, thiết lập điểm spawn
+    local args = {
+        [1] = "SetSpawnPoint"
+    }
+    game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("CommF_"):InvokeServer(unpack(args))
+
+    wait(1)
+    RandomAction()
+    UnequipTools()
+    DropMultipleItemsFromBackpack(200)
+
+    wait(1)
+    while true do
+        replicatedStorage.Remotes.CommF_:InvokeServer("EnablePvp")
+        local newPosition = CFrame.new(-180.851715, 151.338257, -271.671143, 0.743322313, -0.0261673555, -0.668421447, -8.11414793e-08, 0.999234617, -0.0391181037, 0.668933392, 0.0290774107, 0.742753386)
+        flyToPositionSmooth(newPosition, 200)
+        wait(2)
     end
 end)
