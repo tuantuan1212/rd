@@ -93,7 +93,7 @@ local function TravelToDressrosa()
 end
 
 -- Vị trí bắt đầu
-local startPosition = CFrame.new(-372.049652, 150.903564, 225.194305)
+local startPosition = CFrame.new(-391.223541, 151.14415, 381.626801, -0.996948361, 0.00316949282, 0.0780005008, -1.28056854e-08, 0.999175429, -0.0406005718, -0.0780648738, -0.0404766612, -0.996126115)
 
 -- Thực hiện các hành động
 SetTeam("Pirates")
