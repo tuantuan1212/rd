@@ -81,7 +81,24 @@ local function UnequipTools()
     end
 end
 
--- Gọi phương thức TravelDressrosa
+-- Hàm reset stats
+local function ResetStats()
+    local args = {
+        [1] = "BlackbeardReward",
+        [2] = "Refund",
+        [3] = "2"
+    }
+
+    local success, result = pcall(function()
+        return replicatedStorage.Remotes.CommF_:InvokeServer(unpack(args))
+    end)
+
+    if not success then
+        warn("Error during ResetStats:", result)
+    end
+end
+
+-- Hàm gói dịch chuyển đến Dressrosa
 local function TravelToDressrosa()
     local success, result = pcall(function()
         return replicatedStorage.Remotes.CommF_:InvokeServer("TravelDressrosa")
@@ -116,6 +133,10 @@ flyToPositionSmooth(startPosition, 200, function()
     game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("CommF_"):InvokeServer(unpack(args))
 
     wait(1)
+
+    -- Gọi hàm reset stats chỉ một lần
+    ResetStats()
+
     RandomAction()
     UnequipTools()
     DropMultipleItemsFromBackpack(200)
