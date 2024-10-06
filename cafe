@@ -46,6 +46,17 @@ local function flyToPositionSmooth(destination, speed, callback)
     end)
 end
 
+-- Gọi phương thức TravelDressrosa
+local function TravelToDressrosa()
+    local success, result = pcall(function()
+        return replicatedStorage.Remotes.CommF_:InvokeServer("TravelDressrosa")
+    end)
+
+    if not success then
+        warn("Error during TravelToDressrosa:", result)
+    end
+end
+
 -- Các vị trí cần di chuyển
 local newPosition1 = CFrame.new(-180.851715, 151.338257, -271.671143, 0.743322313, -0.0261673555, -0.668421447, -8.11414793e-08, 0.999234617, -0.0391181037, 0.668933392, 0.0290774107, 0.742753386)
 local newPosition2 = CFrame.new(-634.967468, 147.353394, -718.839233, -0.0343002453, -0.0401350781, -0.998605311, 1.25379302e-07, 0.999193251, -0.0401587114, 0.999411643, -0.0013775907, -0.0342725702)
@@ -55,10 +66,11 @@ local newPosition4 = CFrame.new(-737.943237, 74.9859161, 34.4008484, 0.52490741,
 -- Thực hiện các hành động
 SetTeam("Pirates")
 wait(1)
+TravelToDressrosa()
 
 -- Bay liên tục đến vị trí thứ nhất trong 60 giây
 local startTime = tick()
-while tick() - startTime < 60 do
+while tick() - startTime < 80 do
     replicatedStorage.Remotes.CommF_:InvokeServer("EnablePvp")
     flyToPositionSmooth(newPosition1, 200)
     wait(1) -- Dừng lại trong 1 giây sau mỗi lần bay
@@ -66,7 +78,7 @@ end
 
 -- Bay liên tục đến vị trí thứ hai trong 60 giây
 startTime = tick()
-while tick() - startTime < 60 do
+while tick() - startTime < 80 do
     replicatedStorage.Remotes.CommF_:InvokeServer("EnablePvp")
     flyToPositionSmooth(newPosition2, 200)
     wait(1) -- Dừng lại trong 1 giây sau mỗi lần bay
@@ -74,7 +86,7 @@ end
 
 -- Bay liên tục đến vị trí thứ ba trong 60 giây
 startTime = tick()
-while tick() - startTime < 60 do
+while tick() - startTime < 80 do
     replicatedStorage.Remotes.CommF_:InvokeServer("EnablePvp")
     flyToPositionSmooth(newPosition3, 1000)
     wait(1) -- Dừng lại trong 1 giây sau mỗi lần bay
@@ -82,7 +94,7 @@ end
 
 -- Bay liên tục đến vị trí thứ tư trong 60 giây
 startTime = tick()
-while tick() - startTime < 60 do
+while tick() - startTime < 80 do
     replicatedStorage.Remotes.CommF_:InvokeServer("EnablePvp")
     flyToPositionSmooth(newPosition4, 1000)
     wait(1) -- Dừng lại trong 1 giây sau mỗi lần bay
