@@ -137,9 +137,9 @@ flyToPositionSmooth(startPosition, 200, function()
     -- Gọi hàm reset stats chỉ một lần
     ResetStats()
 
-    RandomAction()
-    UnequipTools()
-    DropMultipleItemsFromBackpack(200)
+    -- RandomAction()
+    -- UnequipTools()
+    -- DropMultipleItemsFromBackpack(200)
 
     wait(1)
     while true do
