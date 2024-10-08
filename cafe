@@ -113,5 +113,5 @@ for i, destination in ipairs(destinations) do
     RunDestination(i, destination)
 end
 
-wait(8)
+wait(5)
 game:Shutdown()
