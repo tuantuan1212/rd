@@ -46,39 +46,6 @@ local function flyToPositionSmooth(destination, speed, callback)
     end)
 end
 
--- Hàm thực hiện hành động ngẫu nhiên
-local function RandomAction()
-    local success, result = pcall(function()
-        return replicatedStorage.Remotes.CommF_:InvokeServer("Cousin", "Buy")
-    end)
-
-    if not success then
-        warn("Error during RandomAction:", result)
-    end
-end
-
--- Hàm thả nhiều đồ từ ba lô
-local function DropMultipleItemsFromBackpack(quantity)
-    for _, tool in ipairs(player.Backpack:GetChildren()) do
-        if tool:IsA("Tool") then
-            tool.Parent = player.Character
-            local toolInCharacter = player.Character:FindFirstChild(tool.Name)
-            if toolInCharacter then
-                toolInCharacter.Parent = game.Workspace
-            end
-        end
-    end
-end
-
--- Hàm gỡ bỏ công cụ
-local function UnequipTools()
-    for _, tool in ipairs(player.Character:GetChildren()) do
-        if tool:IsA("Tool") then
-            tool.Parent = player.Backpack
-        end
-    end
-end
-
 -- Gọi phương thức TravelDressrosa
 local function TravelToDressrosa()
     local success, result = pcall(function()
@@ -90,30 +57,45 @@ local function TravelToDressrosa()
     end
 end
 
--- Vị trí bắt đầu
-local startPosition = CFrame.new(-372.049652, 150.903564, 225.194305, 0.99265933, -0.00475903414, -0.120850623, 9.77888703e-08, 0.999225557, -0.039348051, 0.120944306, 0.0390591919, 0.99189055)
+-- Các vị trí cần di chuyển
+local newPosition1 = CFrame.new(-180.851715, 151.338257, -271.671143, 0.743322313, -0.0261673555, -0.668421447, -8.11414793e-08, 0.999234617, -0.0391181037, 0.668933392, 0.0290774107, 0.742753386)
+local newPosition2 = CFrame.new(-634.967468, 147.353394, -718.839233, -0.0343002453, -0.0401350781, -0.998605311, 1.25379302e-07, 0.999193251, -0.0401587114, 0.999411643, -0.0013775907, -0.0342725702)
+local newPosition3 = CFrame.new(-639.295166, 74.7728729, -225.293991, -0.843387008, 0.0109225279, 0.537195563, 4.44141915e-06, 0.99979347, -0.0203213133, -0.537306607, -0.0171363242, -0.843212903)
+local newPosition4 = CFrame.new(-737.943237, 74.9859161, 34.4008484, 0.52490741, -0.0237223599, 0.850828588, -0.00857717544, 0.999413371, 0.0331566781, -0.851116061, -0.0247018971, 0.524396002)
 
 -- Thực hiện các hành động
 SetTeam("Pirates")
 wait(1)
 TravelToDressrosa()
 
-flyToPositionSmooth(startPosition, 200, function()
-        local success, errorMessage = pcall(function()
-            flyToPositionSmooth(startPosition, 200)
-        end)
+-- Bay liên tục đến vị trí thứ nhất trong 60 giây
+local startTime = tick()
+while tick() - startTime < 90 do
+    replicatedStorage.Remotes.CommF_:InvokeServer("EnablePvp")
+    flyToPositionSmooth(newPosition1, 200)
+    wait(1) -- Dừng lại trong 1 giây sau mỗi lần bay
+end
 
-        if not success then
-            warn("Error during flyToPositionSmooth:", errorMessage)
-        end
-        
-        wait(1)
-        RandomAction()
-        UnequipTools()
-        DropMultipleItemsFromBackpack(200)
-while true do
-replicatedStorage.Remotes.CommF_:InvokeServer("EnablePvp")
-local startPosition = CFrame.new(-474.97757, 150.915604, 327.867401, 0.0508248284, 0.0412671156, 0.99785465, -1.15775038e-07, 0.999145985, -0.0413205139, -0.998707652, 0.0020999955, 0.0507814251)
-      wait(1)
-    end
-end)
+-- Bay liên tục đến vị trí thứ hai trong 60 giây
+startTime = tick()
+while tick() - startTime < 90 do
+    replicatedStorage.Remotes.CommF_:InvokeServer("EnablePvp")
+    flyToPositionSmooth(newPosition2, 200)
+    wait(1) -- Dừng lại trong 1 giây sau mỗi lần bay
+end
+
+-- Bay liên tục đến vị trí thứ ba trong 60 giây
+startTime = tick()
+while tick() - startTime < 90 do
+    replicatedStorage.Remotes.CommF_:InvokeServer("EnablePvp")
+    flyToPositionSmooth(newPosition3, 1000)
+    wait(1) -- Dừng lại trong 1 giây sau mỗi lần bay
+end
+
+-- Bay liên tục đến vị trí thứ tư trong 60 giây
+startTime = tick()
+while tick() - startTime < 100 do
+    replicatedStorage.Remotes.CommF_:InvokeServer("EnablePvp")
+    flyToPositionSmooth(newPosition4, 1000)
+    wait(1) -- Dừng lại trong 1 giây sau mỗi lần bay
+end
