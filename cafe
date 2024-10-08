@@ -7,6 +7,16 @@ local function SetTeam(teamName)
     replicatedStorage.Remotes.CommF_:InvokeServer("SetTeam", teamName)
 end
 
+-- Hàm reset stats
+local function ResetStats()
+    local args = {
+        [1] = "BlackbeardReward",
+        [2] = "Refund",
+        [3] = "2"
+    }
+    replicatedStorage.Remotes.CommF_:InvokeServer(unpack(args))
+end
+
 -- Hàm di chuyển đến vị trí với hiệu ứng mượt mà
 local function flyToPositionSmooth(destination, speed, callback)
     local humanoidRootPart = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
@@ -66,9 +76,14 @@ local newPosition4 = CFrame.new(-737.943237, 74.9859161, 34.4008484, 0.52490741,
 -- Thực hiện các hành động
 SetTeam("Pirates")
 wait(1)
+
+-- Reset stats sau khi chọn phe
+ResetStats()
+wait(1)
+
 TravelToDressrosa()
 
--- Bay liên tục đến vị trí thứ nhất trong 60 giây
+-- Bay liên tục đến vị trí thứ nhất trong 90 giây
 local startTime = tick()
 while tick() - startTime < 90 do
     replicatedStorage.Remotes.CommF_:InvokeServer("EnablePvp")
@@ -76,7 +91,7 @@ while tick() - startTime < 90 do
     wait(1) -- Dừng lại trong 1 giây sau mỗi lần bay
 end
 
--- Bay liên tục đến vị trí thứ hai trong 60 giây
+-- Bay liên tục đến vị trí thứ hai trong 90 giây
 startTime = tick()
 while tick() - startTime < 90 do
     replicatedStorage.Remotes.CommF_:InvokeServer("EnablePvp")
@@ -84,7 +99,7 @@ while tick() - startTime < 90 do
     wait(1) -- Dừng lại trong 1 giây sau mỗi lần bay
 end
 
--- Bay liên tục đến vị trí thứ ba trong 60 giây
+-- Bay liên tục đến vị trí thứ ba trong 90 giây
 startTime = tick()
 while tick() - startTime < 90 do
     replicatedStorage.Remotes.CommF_:InvokeServer("EnablePvp")
@@ -92,7 +107,7 @@ while tick() - startTime < 90 do
     wait(1) -- Dừng lại trong 1 giây sau mỗi lần bay
 end
 
--- Bay liên tục đến vị trí thứ tư trong 60 giây
+-- Bay liên tục đến vị trí thứ tư trong 100 giây
 startTime = tick()
 while tick() - startTime < 100 do
     replicatedStorage.Remotes.CommF_:InvokeServer("EnablePvp")
