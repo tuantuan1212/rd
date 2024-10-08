@@ -79,10 +79,10 @@ local function UnequipTools()
     end
 end
 
--- Gọi phương thức TravelMain
-local function TravelMain()
+-- Gọi phương thức TravelDressrosa
+local function TravelDressrosa()
     local success, result = pcall(function()
-        return replicatedStorage.Remotes.CommF_:InvokeServer("TravelMain")
+        return replicatedStorage.Remotes.CommF_:InvokeServer("TravelDressrosa")
     end)
 
     if not success then
@@ -96,7 +96,7 @@ local startPosition = CFrame.new(-391.223541, 151.14415, 381.626801, -0.99694836
 -- Thực hiện các hành động
 SetTeam("Pirates")
 wait(1)
-TravelMain()
+TravelDressrosa()
 
 flyToPositionSmooth(startPosition, 200, function()
     while true do
