@@ -1,33 +1,68 @@
-local plr = game.Players.LocalPlayer
-local rs = game:GetService("ReplicatedStorage")
-local virtualInputManager = game:GetService("VirtualInputManager")
+local player = game.Players.LocalPlayer
+local replicatedStorage = game:GetService("ReplicatedStorage")
+local runService = game:GetService("RunService")
 
+-- Hàm thay đổi đội
 local function SetTeam(teamName)
-    rs.Remotes.CommF_:InvokeServer("SetTeam", teamName)
+    replicatedStorage.Remotes.CommF_:InvokeServer("SetTeam", teamName)
 end
 
-local function MoveTo(destination)
-    local humanoid = plr.Character:WaitForChild("Humanoid")
-    humanoid:MoveTo(destination)
-    humanoid.MoveToFinished:Wait()
+-- Hàm di chuyển đến vị trí với hiệu ứng mượt mà
+local function flyToPositionSmooth(destination, speed, callback)
+    local humanoidRootPart = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+    if not humanoidRootPart then
+        warn("HumanoidRootPart not found. Character may not be loaded.")
+        return
+    end
+
+    local startPosition = humanoidRootPart.Position
+    local distance = (destination.Position - startPosition).Magnitude
+    if distance == 0 then
+        warn("Start and destination positions are the same. No movement needed.")
+        return
+    end
+
+    local travelTime = distance / speed
+    if travelTime <= 0 then
+        warn("Invalid travelTime calculated. Speed may be too high.")
+        return
+    end
+
+    local startTime = tick()
+
+    local connection
+    connection = runService.Heartbeat:Connect(function()
+        local elapsedTime = tick() - startTime
+        if elapsedTime < travelTime then
+            local progress = elapsedTime / travelTime
+            humanoidRootPart.CFrame = CFrame.new(startPosition:Lerp(destination.Position, progress))
+        else
+            humanoidRootPart.CFrame = destination
+            connection:Disconnect()
+            if callback then
+                callback()
+            end
+        end
+    end)
 end
 
-local function InstantTeleportTo(position)
-    -- Bay tức thời tới vị trí bằng cách thay đổi CFrame của nhân vật
-    if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-        plr.Character.HumanoidRootPart.CFrame = CFrame.new(position)
+-- Hàm thực hiện hành động ngẫu nhiên
+local function RandomAction()
+    local success, result = pcall(function()
+        return replicatedStorage.Remotes.CommF_:InvokeServer("Cousin", "Buy")
+    end)
+
+    if not success then
+        warn("Error during RandomAction:", result)
     end
 end
 
-local function RandomAction()
-    rs.Remotes.CommF_:InvokeServer("Cousin", "Buy")
-end
-
+-- Hàm thả nhiều đồ từ ba lô
 local function DropMultipleItemsFromBackpack(quantity)
-    for _, tool in ipairs(plr.Backpack:GetChildren()) do
+    for _, tool in ipairs(player.Backpack:GetChildren()) do
         if tool:IsA("Tool") then
-            tool.Parent = plr.Character
-            local toolInCharacter = plr.Character:FindFirstChild(tool.Name)
+            tool.Parent = player.Character
+            local toolInCharacter = player.Character:FindFirstChild(tool.Name)
             if toolInCharacter then
                 toolInCharacter.Parent = game.Workspace
             end
@@ -35,83 +70,47 @@ local function DropMultipleItemsFromBackpack(quantity)
     end
 end
 
+-- Hàm gỡ bỏ công cụ
 local function UnequipTools()
-    for _, tool in ipairs(plr.Character:GetChildren()) do
+    for _, tool in ipairs(player.Character:GetChildren()) do
         if tool:IsA("Tool") then
-            tool.Parent = plr.Backpack
+            tool.Parent = player.Backpack
         end
     end
 end
 
-local function PerformRandomActions()
-    while true do
-        RandomAction()
-        UnequipTools()
-        wait(1)
-        DropMultipleItemsFromBackpack(200)
-        wait(1)
+-- Gọi phương thức TravelDressrosa
+local function TravelDressrosa()
+    local success, result = pcall(function()
+        return replicatedStorage.Remotes.CommF_:InvokeServer("TravelDressrosa")
+    end)
+
+    if not success then
+        warn("Error during TravelMain:", result)
     end
 end
 
-local coordinateList = {
-    {-453.087921, 74.8094025, 389.108856, -0.927124262, 0.0260333996, 0.373848617, -1.82795338e-06, 0.997583926, -0.0694724843, -0.374754012, -0.0644103065, -0.9248842},
-    {-453.905304, 74.86586, 395.973602, -0.513423443, 0.0335589275, 0.857479036, -3.17231752e-08, 0.999235034, -0.0391068235, -0.858135402, -0.0200784057, -0.513030767},
-    {-449.471649, 74.8664856, 405.541107, -0.51703769, 0.0436455756, 0.85484916, -7.64412107e-08, 0.998699188, -0.0509900898, -0.855962753, -0.0263638794, -0.516365111},
-    {-441.548065, 74.8659286, 409.364197, -0.887171507, 0.0180446841, 0.46108681, -1.03609636e-08, 0.999235034, -0.0391051508, -0.461439759, -0.034692958, -0.886492908},
-    {-433.579346, 74.8106918, 414.221649, -0.338248283, -0.0725928172, -0.938252807, -1.4170073e-06, 0.997020245, -0.0771391615, 0.941056788, -0.0260908678, -0.337240517},
-    {-429.047974, 74.8649368, 416.863586, -0.98142314, 0.00880107563, 0.191653907, 1.10652763e-07, 0.998947322, -0.0458729044, -0.191855878, -0.0450206995, -0.980389953},
-    {-421.877472, 74.8108978, 419.239014, -0.207515776, -0.0768587515, -0.975207686, -4.984322e-07, 0.996908665, -0.0785689652, 0.978231788, -0.0163038056, -0.206874281},
-    {-416.332489, 74.8341217, 417.071899, -0.97398001, 0.00855293218, -0.226472333, -0.0140951639, 0.99506712, 0.0981980264, 0.226194993, 0.0988350809, -0.969054878},
-    {-413.550079, 74.8647385, 413.986511, -0.0974908173, -0.0418874472, -0.994354606, -1.56462193e-07, 0.999113917, -0.04208792, 0.995236456, -0.00410302822, -0.0974044353},
-    {-408.084808, 74.8660049, 410.271759, -0.13658829, -0.0509361997, -0.989317477, -1.54381269e-07, 0.998677194, -0.051418066, 0.990627825, -0.0070229657, -0.136407614},
-    {-403.470825, 74.8653564, 400.832428, -0.0193392783, -0.0501784794, -0.998553097, 2.95680366e-07, 0.998739779, -0.0501878485, 0.99981302, -0.000970865134, -0.0193149},
-    {-454.565491, 74.8667297, 422.465576, -0.989528298, 0.00731950952, 0.14415291, -2.82161636e-08, 0.998713434, -0.0507110208, -0.144338608, -0.0501799919, -0.988255143},
-    {-394.896576, 74.7674103, 394.537231, -0.91452539, -0.00176745758, -0.404524565, -3.01282853e-07, 0.999990463, -0.00436852314, 0.404528409, -0.00399499899, -0.914516628},
-    {-400.856598, 74.8656616, 404.389557, -0.190003797, -0.0506454147, -0.980476201, 1.14858267e-07, 0.998668551, -0.0515851453, 0.981783271, -0.0098014893, -0.18975082},
-    {-408.088409, 74.8654556, 410.545715, -0.778918982, -0.0319818445, -0.62630868, 5.87897375e-08, 0.998698771, -0.0509976521, 0.627124727, -0.0397230722, -0.777905345},
-    {-394.386597, 74.8720016, 413.801483, -0.390612334, -0.04198125, -0.919597447, 3.51748895e-07, 0.998959601, -0.0456044227, 0.920555234, -0.0178139713, -0.39020592},
-    {-383.872253, 74.8720016, 394.461823, -0.129029751, -0.0452232286, -0.99060899, 2.82423571e-07, 0.998959601, -0.0456044935, 0.991640687, -0.00588461431, -0.128895476},
-    {-384.789642, 74.8659286, 415.207855, -0.981815577, -0.00742357224, -0.189691752, 1.14087015e-08, 0.999235034, -0.0391051993, 0.189836949, -0.0383940935, -0.981064618},
-    {-410.967926, 74.8687363, 416.652405, -0.995546818, 0.00456094183, 0.0941580683, -4.95056156e-08, 0.998828888, -0.0483831801, -0.0942684561, -0.0481677316, -0.994380951},
-    {-440.919342, 74.8667908, 416.870087, -0.968394339, 0.0126287183, 0.249104202, 3.00497049e-08, 0.998717368, -0.0506313592, -0.2494241, -0.0490311161, -0.967152297},
-    {-467.23056, 74.7723083, 408.031982, 0.91619581, 0.0069207307, 0.400671065, 4.57698479e-06, 0.99985069, -0.0172806811, -0.400730819, 0.0158343315, 0.916058898},
-    {-447.797028, 74.8667603, 413.76178, -0.584447742, 0.0411161892, 0.810388923, -7.52042979e-08, 0.998715401, -0.0506712273, -0.811431289, -0.0296147354, -0.583696961},
-    {-416.879517, 74.8678665, 415.626343, -0.993515491, 0.00560986716, 0.11355827, -7.39673836e-09, 0.999757469, -0.0212329172, -0.113596632, -0.0212062843, -0.993119776},
-    {-411.406342, 74.8653279, 418.845001, -0.887382567, -0.0264895268, -0.460249245, 1.15956092e-06, 0.999412716, -0.0340327439, 0.461344505, -0.0425307977, -0.885873914},
-}
+-- Vị trí bắt đầu
+local startPosition = CFrame.new(-391.223541, 151.14415, 381.626801, -0.996948361, 0.00316949282, 0.0780005008, -1.28056854e-08, 0.999175429, -0.0406005718, -0.0780648738, -0.0404766612, -0.996126115)
 
-local newPosition = Vector3.new(-374.957214, 74.8684921, 305.808533)
-
-local destinations = {
-    Vector3.new(-439.756195, 74.7229309, 334.207611),
-    Vector3.new(-430.462463, 74.6348419, 383.055756),
-    Vector3.new(-426.655273, 74.6416321, 387.312103),
-    -- Vị trí thứ 4 sẽ lấy ngẫu nhiên một tọa độ
-    Vector3.new(table.unpack(coordinateList[math.random(1, #coordinateList)]))
-}
-
+-- Thực hiện các hành động
 SetTeam("Pirates")
 wait(1)
+TravelDressrosa()
 
--- Di chuyển đến vị trí mới bằng cách bay tức thời
-InstantTeleportTo(newPosition)
-wait(1)  -- Dừng lại một chút sau khi bay
+flyToPositionSmooth(startPosition, 200, function()
+    while true do
+        local success, errorMessage = pcall(function()
+            flyToPositionSmooth(startPosition, 200)
+        end)
 
-local function RunDestination(i, destination)
-    MoveTo(destination)
-
-    if i == 4 then
-        local actionCoroutine = coroutine.create(PerformRandomActions)
-        coroutine.resume(actionCoroutine)
-    elseif i == 3 then
-        -- Dừng lại vài giây (ví dụ: 5 giây) tại vị trí thứ 3
-        wait(5)
+        if not success then
+            warn("Error during flyToPositionSmooth:", errorMessage)
+        end
+        
+        wait(1)
+        RandomAction()
+        UnequipTools()
+        DropMultipleItemsFromBackpack(200)
     end
-end
-
-for i, destination in ipairs(destinations) do
-    RunDestination(i, destination)
-end
-
-wait(8)
-game:Shutdown()
+end)
