@@ -114,4 +114,4 @@ for i, destination in ipairs(destinations) do
 end
 
 wait(8)
----game:Shutdown()
+game:Shutdown()
