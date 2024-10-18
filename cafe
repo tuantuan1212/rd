@@ -46,71 +46,38 @@ local function flyToPositionSmooth(destination, speed, callback)
     end)
 end
 
--- Hàm thực hiện hành động ngẫu nhiên
-local function RandomAction()
-    local success, result = pcall(function()
-        return replicatedStorage.Remotes.CommF_:InvokeServer("Cousin", "Buy")
-    end)
-
-    if not success then
-        warn("Error during RandomAction:", result)
-    end
-end
-
--- Hàm thả nhiều đồ từ ba lô
-local function DropMultipleItemsFromBackpack(quantity)
-    for _, tool in ipairs(player.Backpack:GetChildren()) do
-        if tool:IsA("Tool") then
-            tool.Parent = player.Character
-            local toolInCharacter = player.Character:FindFirstChild(tool.Name)
-            if toolInCharacter then
-                toolInCharacter.Parent = game.Workspace
-            end
-        end
-    end
-end
-
--- Hàm gỡ bỏ công cụ
-local function UnequipTools()
-    for _, tool in ipairs(player.Character:GetChildren()) do
-        if tool:IsA("Tool") then
-            tool.Parent = player.Backpack
-        end
-    end
-end
-
 -- Gọi phương thức TravelDressrosa
-local function TravelDressrosa()
+local function TravelToDressrosa()
     local success, result = pcall(function()
         return replicatedStorage.Remotes.CommF_:InvokeServer("TravelDressrosa")
     end)
 
     if not success then
-        warn("Error during TravelMain:", result)
+        warn("Error during TravelToDressrosa:", result)
     end
 end
 
--- Vị trí bắt đầu
-local startPosition = CFrame.new(-391.223541, 151.14415, 381.626801, -0.996948361, 0.00316949282, 0.0780005008, -1.28056854e-08, 0.999175429, -0.0406005718, -0.0780648738, -0.0404766612, -0.996126115)
+-- Các vị trí cần di chuyển
+local newPosition1 = CFrame.new(-180.851715, 151.338257, -271.671143, 0.743322313, -0.0261673555, -0.668421447, -8.11414793e-08, 0.999234617, -0.0391181037, 0.668933392, 0.0290774107, 0.742753386)
+local newPosition2 = CFrame.new(-634.967468, 147.353394, -718.839233, -0.0343002453, -0.0401350781, -0.998605311, 1.25379302e-07, 0.999193251, -0.0401587114, 0.999411643, -0.0013775907, -0.0342725702)
 
 -- Thực hiện các hành động
 SetTeam("Pirates")
 wait(1)
-TravelDressrosa()
+TravelToDressrosa()
 
-flyToPositionSmooth(startPosition, 200, function()
-    while true do
-        local success, errorMessage = pcall(function()
-            flyToPositionSmooth(startPosition, 200)
-        end)
+-- Bay liên tục đến vị trí thứ nhất trong 60 giây
+local startTime = tick()
+while tick() - startTime < 90 do
+    replicatedStorage.Remotes.CommF_:InvokeServer("EnablePvp")
+    flyToPositionSmooth(newPosition1, 200)
+    wait(0) -- Dừng lại trong 1 giây sau mỗi lần bay
+end
 
-        if not success then
-            warn("Error during flyToPositionSmooth:", errorMessage)
-        end
-        
-        wait(1)
-        RandomAction()
-        UnequipTools()
-        DropMultipleItemsFromBackpack(200)
-    end
-end)
+-- Bay liên tục đến vị trí thứ hai trong 60 giây
+startTime = tick()
+while tick() - startTime < 100 do
+    replicatedStorage.Remotes.CommF_:InvokeServer("EnablePvp")
+    flyToPositionSmooth(newPosition2, 200)
+    wait(0) -- Dừng lại trong 1 giây sau mỗi lần bay
+end
