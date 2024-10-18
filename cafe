@@ -57,7 +57,7 @@ local function flyToPositionSmooth(destination, speed, callback)
     end)
 end
 
--- Gọi phương thức TravelDressrosa
+-- Gọi phương thức TravelDressrosaa
 local function TravelToDressrosa()
     local success, result = pcall(function()
         return replicatedStorage.Remotes.CommF_:InvokeServer("TravelDressrosa")
@@ -71,7 +71,7 @@ end
 -- Các vị trí cần di chuyển
 local positions = {
     CFrame.new(-180.851715, 151.338257, -271.671143),
-    CFrame.new(-634.967468, 147.353394, -718.839233)
+    CFrame.new(-639.295166, 74.7728729, -225.293991)
 }
 local currentPositionIndex = 1
 
