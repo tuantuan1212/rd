@@ -2,6 +2,12 @@ local player = game.Players.LocalPlayer
 local replicatedStorage = game:GetService("ReplicatedStorage")
 local runService = game:GetService("RunService")
 
+-- Biến đếm số lần chết
+local deathCount = 0
+local maxDeaths = 3
+local stopAfterMaxDeathsAtSecondPosition = false
+local isFlying = false
+
 -- Hàm thay đổi đội
 local function SetTeam(teamName)
     replicatedStorage.Remotes.CommF_:InvokeServer("SetTeam", teamName)
@@ -32,6 +38,11 @@ local function flyToPositionSmooth(destination, speed, callback)
 
     local connection
     connection = runService.Heartbeat:Connect(function()
+        if not isFlying then
+            connection:Disconnect() -- Ngắt kết nối nếu không bay nữa
+            return
+        end
+
         local elapsedTime = tick() - startTime
         if elapsedTime < travelTime then
             local progress = elapsedTime / travelTime
@@ -58,26 +69,61 @@ local function TravelToDressrosa()
 end
 
 -- Các vị trí cần di chuyển
-local newPosition1 = CFrame.new(-180.851715, 151.338257, -271.671143, 0.743322313, -0.0261673555, -0.668421447, -8.11414793e-08, 0.999234617, -0.0391181037, 0.668933392, 0.0290774107, 0.742753386)
-local newPosition2 = CFrame.new(-634.967468, 147.353394, -718.839233, -0.0343002453, -0.0401350781, -0.998605311, 1.25379302e-07, 0.999193251, -0.0401587114, 0.999411643, -0.0013775907, -0.0342725702)
+local positions = {
+    CFrame.new(-180.851715, 151.338257, -271.671143),
+    CFrame.new(-634.967468, 147.353394, -718.839233)
+}
+local currentPositionIndex = 1
+
+-- Hàm bay liên tục đến vị trí hiện tại
+local function flyToCurrentPosition()
+    local currentDestination = positions[currentPositionIndex]
+
+    -- Đảm bảo rằng không có vòng lặp bay trước đó còn hoạt động
+    isFlying = false
+    wait(1)  -- Tạm dừng ngắn để chắc chắn ngắt kết nối các vòng lặp cũ
+    isFlying = true
+
+    -- Liên tục bay đến vị trí hiện tại mà không có giới hạn thời gian
+    while isFlying do
+        if stopAfterMaxDeathsAtSecondPosition then
+            warn("Script stopped after reaching max deaths at the second position.")
+            return -- Dừng script sau khi chết 3 lần ở vị trí thứ 2
+        end
+
+        replicatedStorage.Remotes.CommF_:InvokeServer("EnablePvp")
+        flyToPositionSmooth(currentDestination, 200)
+        wait(0) -- Dừng lại trong 1 giây sau mỗi lần bay
+    end
+end
+
+-- Hàm khi nhân vật chết
+local function onPlayerDied()
+    deathCount = deathCount + 1
+    if deathCount >= maxDeaths then
+        if currentPositionIndex == 1 then
+            -- Nếu đang ở vị trí thứ nhất, chuyển sang vị trí thứ 2
+            deathCount = 0  -- Reset lại bộ đếm
+            currentPositionIndex = currentPositionIndex + 1
+            flyToCurrentPosition()  -- Bắt đầu bay đến vị trí thứ 2
+        elseif currentPositionIndex == 2 then
+            -- Nếu đang ở vị trí thứ 2, dừng script
+            stopAfterMaxDeathsAtSecondPosition = true
+            isFlying = false  -- Dừng mọi vòng lặp bay
+        end
+    end
+end
+
+-- Kết nối sự kiện chết của nhân vật
+player.CharacterAdded:Connect(function(character)
+    local humanoid = character:WaitForChild("Humanoid")
+    humanoid.Died:Connect(onPlayerDied)
+end)
 
 -- Thực hiện các hành động
 SetTeam("Pirates")
 wait(1)
 TravelToDressrosa()
 
--- Bay liên tục đến vị trí thứ nhất trong 60 giây
-local startTime = tick()
-while tick() - startTime < 90 do
-    replicatedStorage.Remotes.CommF_:InvokeServer("EnablePvp")
-    flyToPositionSmooth(newPosition1, 200)
-    wait(0) -- Dừng lại trong 1 giây sau mỗi lần bay
-end
-
--- Bay liên tục đến vị trí thứ hai trong 60 giây
-startTime = tick()
-while tick() - startTime < 100 do
-    replicatedStorage.Remotes.CommF_:InvokeServer("EnablePvp")
-    flyToPositionSmooth(newPosition2, 200)
-    wait(0) -- Dừng lại trong 1 giây sau mỗi lần bay
-end
+-- Bắt đầu bay liên tục đến vị trí đầu tiên cho đến khi chết 3 lần
+flyToCurrentPosition()
