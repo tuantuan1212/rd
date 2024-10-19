@@ -1,75 +1,102 @@
-local plr = game.Players.LocalPlayer
-local rs = game:GetService("ReplicatedStorage")
+local players = game:GetService("Players")
+local localPlayer = players.LocalPlayer
+local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 local virtualInputManager = game:GetService("VirtualInputManager")
+local humanoid = character:FindFirstChildOfClass("Humanoid")
 
-local function SetTeam(teamName)
-    rs.Remotes.CommF_:InvokeServer("SetTeam", teamName)
+-- Tọa độ ban đầu
+local targetPosition = CFrame.new(-639.295166, 74.7728729, -225.293991)
+
+-- Hàm di chuyển đến tọa độ
+local function teleportTo(position)
+    humanoidRootPart.CFrame = position
 end
 
-local function MoveTo(destination)
-    local humanoid = plr.Character:WaitForChild("Humanoid")
-    humanoid:MoveTo(destination)
-    humanoid.MoveToFinished:Wait()
+-- Hàm kích hoạt Haki
+local function activateHaki()
+    print("Activating Haki")
+    virtualInputManager:SendKeyEvent(true, Enum.KeyCode.J, false, game)
+    wait(0.05)  -- Thay đổi thời gian chờ ngắn hơn
+    virtualInputManager:SendKeyEvent(false, Enum.KeyCode.J, false, game)
 end
 
-local function RandomAction()
-    rs.Remotes.CommF_:InvokeServer("Cousin", "Buy")
+-- Hàm kích hoạt khả năng
+local function activateAbility(abilityKey)
+    if humanoid then
+        humanoid.WalkSpeed = 0  -- Ngăn nhân vật di chuyển khi kích hoạt khả năng
+    end
+
+    print("Activating ability with key:", abilityKey)
+    virtualInputManager:SendKeyEvent(true, abilityKey, false, game)
+    wait(0.05)  -- Thay đổi thời gian chờ ngắn hơn
+    virtualInputManager:SendKeyEvent(false, abilityKey, false, game)
+
+    if humanoid then
+        humanoid.WalkSpeed = 16  -- Khôi phục tốc độ đi bộ mặc định
+    end
 end
 
-local function DropMultipleItemsFromBackpack(quantity)
-    for _, tool in ipairs(plr.Backpack:GetChildren()) do
-        if tool:IsA("Tool") then
-            tool.Parent = plr.Character
-            local toolInCharacter = plr.Character:FindFirstChild(tool.Name)
-            if toolInCharacter then
-                toolInCharacter.Parent = game.Workspace
+-- Hàm kiểm tra kẻ địch trong phạm vi
+local function getEnemiesInRange(range)
+    local enemies = {}
+    for _, player in ipairs(players:GetPlayers()) do
+        if player ~= localPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            local enemyRootPart = player.Character.HumanoidRootPart
+            local distance = (humanoidRootPart.Position - enemyRootPart.Position).magnitude
+            if distance <= range then
+                table.insert(enemies, player)
             end
         end
     end
+    return enemies
 end
 
-local function UnequipTools()
-    for _, tool in ipairs(plr.Character:GetChildren()) do
-        if tool:IsA("Tool") then
-            tool.Parent = plr.Backpack
-        end
+-- Hàm chuyển đổi vũ khí và sử dụng kỹ năng
+local function switchWeaponAndUseAbilities(weaponKey, abilities)
+    local virtualInputManager = game:GetService("VirtualInputManager")
+    print("Switching to weapon:", weaponKey)
+
+    -- Chuyển sang vũ khí mới
+    virtualInputManager:SendKeyEvent(true, weaponKey, false, game)
+    wait(0)  -- Thời gian chờ ngắn hơn
+    virtualInputManager:SendKeyEvent(false, weaponKey, false, game)
+
+    -- Sử dụng các kỹ năng theo thứ tự
+    for _, ability in ipairs(abilities) do
+        activateAbility(ability)
+        wait(0.1)  -- Thời gian chờ ngắn hơn giữa các kỹ năng
     end
 end
 
-local function PerformRandomActions()
+-- Hàm thực hiện các bước cần thiết
+local function executeActions()
+    -- Di chuyển đến tọa độ ban đầu
+    teleportTo(targetPosition)
+    print("Teleported to target position.")
+
+    -- Kích hoạt Haki
+    activateHaki()
+
     while true do
-        RandomAction()
-        UnequipTools()
-        wait(1)
-        DropMultipleItemsFromBackpack(200)
-        wait(1)
+        local enemies = getEnemiesInRange(50) -- Kiểm tra kẻ địch trong phạm vi 50m
+        if #enemies > 0 then
+            -- Thực hiện các combo
+            switchWeaponAndUseAbilities(Enum.KeyCode.One, {Enum.KeyCode.X, Enum.KeyCode.Y, Enum.KeyCode.C})  -- Vũ khí 1
+            wait(0)
+            switchWeaponAndUseAbilities(Enum.KeyCode.Two, {Enum.KeyCode.X, Enum.KeyCode.Z, Enum.KeyCode.C})  -- Vũ khí 2
+            wait(0)
+            switchWeaponAndUseAbilities(Enum.KeyCode.Three, {Enum.KeyCode.Z, Enum.KeyCode.X})  -- Vũ khí 3
+            wait(0)
+            switchWeaponAndUseAbilities(Enum.KeyCode.Four, {Enum.KeyCode.Z, Enum.KeyCode.X})  -- Vũ khí 4
+        else
+            -- Nếu không có kẻ địch trong phạm vi, bay về tọa độ ban đầu
+            print("No enemies in range. Teleporting back to target position.")
+            teleportTo(targetPosition)
+        end
+        wait(0.5) -- Đợi một chút trước khi kiểm tra lại
     end
 end
 
-local destinations = {
-    Vector3.new(-439.756195, 74.7229309, 334.207611),
-    Vector3.new(-430.462463, 74.6348419, 383.055756),
-    Vector3.new(-426.655273, 74.6416321, 387.312103),
-    Vector3.new(-415.558685, 74.5402679, 404.479309, -0.973930359, 0.000758915732, 0.226846188, -8.699717e-07, 0.999994338, -0.00334924622, -0.22684741, -0.00326213031, -0.973924816),  -- Điểm thứ tư
-}
-
-SetTeam("Pirates")
-wait(1)
-
-local function RunDestination(i, destination)
-    MoveTo(destination)
-
-    if i == 4 then
-        local actionCoroutine = coroutine.create(PerformRandomActions)
-        coroutine.resume(actionCoroutine)
-    elseif i == 3 then
-        wait(3)
-    end
-end
-
-for i, destination in ipairs(destinations) do
-    RunDestination(i, destination)
-end
-
-wait(6)
-game:Shutdown()
+-- Kích hoạt hàm thực hiện các bước
+executeActions()
