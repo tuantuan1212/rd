@@ -82,7 +82,7 @@ local function executeActions()
         local enemies = getEnemiesInRange(50) -- Kiểm tra kẻ địch trong phạm vi 50m
         if #enemies > 0 then
             -- Thực hiện các combo
-            switchWeaponAndUseAbilities(Enum.KeyCode.One, {Enum.KeyCode.X, Enum.KeyCode.Y, Enum.KeyCode.C})  -- Vũ khí 1
+            switchWeaponAndUseAbilities(Enum.KeyCode.One, {Enum.KeyCode.X})  -- Vũ khí 1
             wait(0)
             switchWeaponAndUseAbilities(Enum.KeyCode.Two, {Enum.KeyCode.X, Enum.KeyCode.Z, Enum.KeyCode.C})  -- Vũ khí 2
             wait(0)
