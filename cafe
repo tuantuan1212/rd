@@ -2,12 +2,6 @@ local player = game.Players.LocalPlayer
 local replicatedStorage = game:GetService("ReplicatedStorage")
 local runService = game:GetService("RunService")
 
--- Biến đếm số lần chết
-local deathCount = 0
-local maxDeaths = 3
-local stopAfterMaxDeathsAtSecondPosition = false
-local isFlying = false
-
 -- Hàm thay đổi đội
 local function SetTeam(teamName)
     replicatedStorage.Remotes.CommF_:InvokeServer("SetTeam", teamName)
@@ -38,11 +32,6 @@ local function flyToPositionSmooth(destination, speed, callback)
 
     local connection
     connection = runService.Heartbeat:Connect(function()
-        if not isFlying then
-            connection:Disconnect() -- Ngắt kết nối nếu không bay nữa
-            return
-        end
-
         local elapsedTime = tick() - startTime
         if elapsedTime < travelTime then
             local progress = elapsedTime / travelTime
@@ -57,73 +46,71 @@ local function flyToPositionSmooth(destination, speed, callback)
     end)
 end
 
--- Gọi phương thức TravelDressrosaa
-local function TravelToDressrosa()
+-- Hàm thực hiện hành động ngẫu nhiên
+local function RandomAction()
+    local success, result = pcall(function()
+        return replicatedStorage.Remotes.CommF_:InvokeServer("Cousin", "Buy")
+    end)
+
+    if not success then
+        warn("Error during RandomAction:", result)
+    end
+end
+
+-- Hàm thả nhiều đồ từ ba lô
+local function DropMultipleItemsFromBackpack(quantity)
+    for _, tool in ipairs(player.Backpack:GetChildren()) do
+        if tool:IsA("Tool") then
+            tool.Parent = player.Character
+            local toolInCharacter = player.Character:FindFirstChild(tool.Name)
+            if toolInCharacter then
+                toolInCharacter.Parent = game.Workspace
+            end
+        end
+    end
+end
+
+-- Hàm gỡ bỏ công cụ
+local function UnequipTools()
+    for _, tool in ipairs(player.Character:GetChildren()) do
+        if tool:IsA("Tool") then
+            tool.Parent = player.Backpack
+        end
+    end
+end
+
+-- Gọi phương thức TravelDressrosa
+local function TravelDressrosa()
     local success, result = pcall(function()
         return replicatedStorage.Remotes.CommF_:InvokeServer("TravelDressrosa")
     end)
 
     if not success then
-        warn("Error during TravelToDressrosa:", result)
+        warn("Error during TravelMain:", result)
     end
 end
 
--- Các vị trí cần di chuyển
-local positions = {
-    CFrame.new(-180.851715, 151.338257, -271.671143),
-    CFrame.new(-639.295166, 74.7728729, -225.293991)
-}
-local currentPositionIndex = 1
-
--- Hàm bay liên tục đến vị trí hiện tại
-local function flyToCurrentPosition()
-    local currentDestination = positions[currentPositionIndex]
-
-    -- Đảm bảo rằng không có vòng lặp bay trước đó còn hoạt động
-    isFlying = false
-    wait(1)  -- Tạm dừng ngắn để chắc chắn ngắt kết nối các vòng lặp cũ
-    isFlying = true
-
-    -- Liên tục bay đến vị trí hiện tại mà không có giới hạn thời gian
-    while isFlying do
-        if stopAfterMaxDeathsAtSecondPosition then
-            warn("Script stopped after reaching max deaths at the second position.")
-            return -- Dừng script sau khi chết 3 lần ở vị trí thứ 2
-        end
-
-        replicatedStorage.Remotes.CommF_:InvokeServer("EnablePvp")
-        flyToPositionSmooth(currentDestination, 200)
-        wait(0) -- Dừng lại trong 1 giây sau mỗi lần bay
-    end
-end
-
--- Hàm khi nhân vật chết
-local function onPlayerDied()
-    deathCount = deathCount + 1
-    if deathCount >= maxDeaths then
-        if currentPositionIndex == 1 then
-            -- Nếu đang ở vị trí thứ nhất, chuyển sang vị trí thứ 2
-            deathCount = 0  -- Reset lại bộ đếm
-            currentPositionIndex = currentPositionIndex + 1
-            flyToCurrentPosition()  -- Bắt đầu bay đến vị trí thứ 2
-        elseif currentPositionIndex == 2 then
-            -- Nếu đang ở vị trí thứ 2, dừng script
-            stopAfterMaxDeathsAtSecondPosition = true
-            isFlying = false  -- Dừng mọi vòng lặp bay
-        end
-    end
-end
-
--- Kết nối sự kiện chết của nhân vật
-player.CharacterAdded:Connect(function(character)
-    local humanoid = character:WaitForChild("Humanoid")
-    humanoid.Died:Connect(onPlayerDied)
-end)
+-- Vị trí bắt đầu
+local startPosition = CFrame.new(-391.223541, 151.14415, 381.626801, -0.996948361, 0.00316949282, 0.0780005008, -1.28056854e-08, 0.999175429, -0.0406005718, -0.0780648738, -0.0404766612, -0.996126115)
 
 -- Thực hiện các hành động
 SetTeam("Pirates")
 wait(1)
-TravelToDressrosa()
+TravelDressrosa()
 
--- Bắt đầu bay liên tục đến vị trí đầu tiên cho đến khi chết 3 lần
-flyToCurrentPosition()
+flyToPositionSmooth(startPosition, 200, function()
+    while true do
+        local success, errorMessage = pcall(function()
+            flyToPositionSmooth(startPosition, 200)
+        end)
+
+        if not success then
+            warn("Error during flyToPositionSmooth:", errorMessage)
+        end
+        
+        wait(1)
+        RandomAction()
+        UnequipTools()
+        DropMultipleItemsFromBackpack(200)
+    end
+end)
